@@ -27,4 +27,5 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'coolline', '>= 0.4.2'
   gem.add_runtime_dependency 'awesome_print', '~> 1.2'
   gem.add_runtime_dependency 'railties', '>= 3.0', '< 5.0'
+  gem.add_runtime_dependency 'did_you_mean', '~> 0.9'
 end
