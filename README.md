@@ -1,8 +1,10 @@
-Debbie 
+Debbie
 ==========
 Fully based on the amazing work of [@nixme][nixme] (Gopal Patel) on his gem [**Jazz Hands**][jazz_hands]
 
-__**We only removed some stuff that we're not using it**__
+__**We only removed some stuff that we're not using**__
+
+`pry-byebug` is not installed with gem, so Debbie works on all platforms, not only on MRI.
 
 ---
 
@@ -19,9 +21,13 @@ hard-working hands!
 * [**Pry Stack Explorer**][pry-stack_explorer] to navigate the call stack and
   frames.
 * [**Pry Remote**][pry-remote] to connect remotely to a Pry console.
-* [**Pry Byebug**][pry-byebug] Adds step, next, finish and continue commands and breakpoints to Pry using byebug.
 * [**Coolline**][coolline] & [**Coderay**][coderay] for syntax highlighting as
   you type. _Optional. MRI 1.9.3/2.0.0 only_
+
+And select one of debuggers:
+
+* [**Pry Byebug**][pry-byebug] Best choise for MRI rubies > 2.0.
+* [**Pry Nav**][pry-nav] Pry debugger for JRuby.
 
 ## To-Do
 
@@ -29,7 +35,7 @@ hard-working hands!
 
 
 ## Usage
-> #### IMPORTANT 
+> #### IMPORTANT
 > This version of **debbie** works on ruby version > 2.2, if you need to use it on a ruby 2.1+ or 2.0+ stick with the version 1.0.2
 
 Ruby 2.2+, Rails 3, 4 and 5. Add to your project Gemfile:
@@ -37,6 +43,9 @@ Ruby 2.2+, Rails 3, 4 and 5. Add to your project Gemfile:
 ```ruby
 group :development, :test do
   gem 'debbie'
+  # and one of debuggers
+  gem 'pry-byebug', platforms: [:mri]
+  gem 'pry-nav', platforms: [:java]
 end
 ```
 
@@ -105,3 +114,4 @@ file an [issue][issues]. [Project changelog][changelog].
 [changelog]:          https://github.com/goodpeople/debbie/blob/master/CHANGELOG.md
 [simple-log-time]:    http://www.pablocantero.com/blog/2014/08/17/quick-and-dirty-simple-ruby-profiler/
 [pry-byebug]:         https://github.com/deivid-rodriguez/pry-byebug
+[pry-nav]:            https://github.com/nixme/pry-nav

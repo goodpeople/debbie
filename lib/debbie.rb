@@ -1,9 +1,13 @@
 require 'debbie/version'
+require 'pry'
+require 'awesome_print'
+require 'debbie/hirb_ext'
 require 'debbie/railtie' if defined?(Rails)
 require 'active_support'
 require 'readline'
 
 module Debbie
+  module_function
 
   ### Options ###
 
@@ -28,36 +32,89 @@ module Debbie
   mattr_accessor :prompt_separator
   self.prompt_separator = defined?(RbReadline) ? '>' : "\u00BB"
 
+  # Enable syntax highlighting as you type in the Rails console via coolline and
+  # coderay (MRI 1.9.3+ only). Disabled by default as it's a bit buggy.
+  #
+  # Call from a Rails initializer:
+  #
+  #   Debbie.enable_syntax_highlighting_as_you_type!
+  #
+  def enable_syntax_highlighting_as_you_type!
+    raise 'Syntax highlighting only supported on 1.9.3+' unless RUBY_VERSION >= '1.9.3'
 
-  class << self
-    # Enable syntax highlighting as you type in the Rails console via coolline and
-    # coderay (MRI 1.9.3+ only). Disabled by default as it's a bit buggy.
-    #
-    # Call from a Rails initializer:
-    #
-    #   Debbie.enable_syntax_highlighting_as_you_type!
-    #
-    def enable_syntax_highlighting_as_you_type!
-      raise 'Syntax highlighting only supported on 1.9.3+' unless RUBY_VERSION >= '1.9.3'
+    # Use coolline with CodeRay for syntax highlighting as you type.
+    # Only works on >= 1.9.3 because coolline depends on io/console.
 
-      # Use coolline with CodeRay for syntax highlighting as you type.
-      # Only works on >= 1.9.3 because coolline depends on io/console.
+    require 'coolline'
+    require 'coderay'
 
-      require 'coolline'
-      require 'coderay'
+    Pry.config.input = Coolline.new do |c|
+      c.transform_proc = proc do
+        CodeRay.scan(c.line, :ruby).term
+      end
 
-      Pry.config.input = Coolline.new do |c|
-        c.transform_proc = proc do
-          CodeRay.scan(c.line, :ruby).term
-        end
-
-        c.completion_proc = proc do
-          word = c.completed_word
-          Object.constants.map(&:to_s).select { |w| w.start_with? word }
-        end
+      c.completion_proc = proc do
+        word = c.completed_word
+        Object.constants.map(&:to_s).select { |w| w.start_with? word }
       end
     end
-    alias :enable_syntax_highlighting_as_you_type :enable_syntax_highlighting_as_you_type!
+  end
+  alias :enable_syntax_highlighting_as_you_type :enable_syntax_highlighting_as_you_type!
+
+  def setup(options = {})
+    # We're managing the loading of plugins. So don't let pry autoload them.
+    Pry.config.should_load_plugins = false
+
+    # Use awesome_print for output, but keep pry's pager. If Hirb is
+    # enabled, try printing with it first.
+    Pry.config.print = proc do |output, value|
+      return if Debbie._hirb_output && Hirb::View.view_or_page_output(value)
+      pretty = value.ai(indent: 2)
+      Pry::Helpers::BaseHelpers.stagger_output("=> #{pretty}", output)
+    end
+
+    # Friendlier prompt - line number, app name, nesting levels look like
+    # directory paths.
+    #
+    # Heavy use of lazy lambdas so configuration (like Pry.color) can be
+    # changed later or even during console usage.
+    #
+    # Custom color helpers using hints \001 and \002 so that good readline
+    # libraries (GNU, rb-readline) correctly ignore color codes when
+    # calculating line length.
+
+    color = -> { Pry.color && Debbie.colored_prompt }
+    red  = ->(text) { color[] ? "\001\e[0;31m\002#{text}\001\e[0m\002" : text.to_s }
+    blue = ->(text) { color[] ? "\001\e[0;34m\002#{text}\001\e[0m\002" : text.to_s }
+    bold = ->(text) { color[] ? "\001\e[1m\002#{text}\001\e[0m\002"    : text.to_s }
+
+    separator = -> { red.(Debbie.prompt_separator) }
+    name = options.fetch(:name) { 'pry' }
+    colored_name = -> { blue.(name) }
+
+    line = ->(pry) { "[#{bold.(pry.input_array.size)}] " }
+    target_string = ->(object, level) do
+      level = 0 if level < 0
+      unless (string = Pry.view_clip(object)) == 'main'
+        "(#{'../' * level}#{string})"
+      else
+        ''
+      end
+    end
+
+    Pry.config.prompt = [
+      ->(object, level, pry) do      # Main prompt
+        "#{line.(pry)}#{colored_name.()}#{target_string.(object, level)} #{separator.()}  "
+      end,
+      ->(object, level, pry) do      # Wait prompt in multiline input
+        spaces = ' ' * (
+          "[#{pry.input_array.size}] ".size +  # Uncolored `line.(pry)`
+          name.size +
+          target_string.(object, level).size
+        )
+        "#{spaces} #{separator.()}  "
+      end
+    ]
   end
 
   ### Internal methods ###
