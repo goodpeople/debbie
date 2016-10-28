@@ -10,7 +10,10 @@ Gem::Specification.new do |gem|
   gem.license       = 'MIT'
   gem.homepage      = 'https://github.com/goodpeople/debbie'
   gem.summary       = 'Exercise those fingers. Pry-based enhancements for the default Rails console.'
-  gem.description   = "Spending hours in the rails console? Spruce it up and show off those hard-working hands! Debbie replaces IRB with Pry, improves output through awesome_print, and has some other goodies up its sleeves."
+  gem.description   = 'Spending hours in the rails console? ' \
+                      'Spruce it up and show off those hard-working hands! ' \
+                      'Debbie replaces IRB with Pry, improves output through awesome_print, ' \
+                      'and has some other goodies up its sleeves.'
 
   gem.executables   = `git ls-files -- exe/*`.split("\n").map{ |f| File.basename(f) }
   gem.files         = `git ls-files`.split("\n").reject { |f| f.match(%r{^(spec|bin)/}) }
@@ -19,12 +22,17 @@ Gem::Specification.new do |gem|
 
   # Dependencies
   gem.required_ruby_version = '~> 2.2'
-  gem.add_runtime_dependency "pry", "~> 0.10"
-  gem.add_runtime_dependency "pry-doc", "~> 0.6"
+  gem.add_runtime_dependency 'pry', '~> 0.10'
+  gem.add_runtime_dependency 'pry-doc', '~> 0.6'
   gem.add_runtime_dependency 'pry-rails', '~> 0.3'
-  gem.add_runtime_dependency 'pry-byebug'
   gem.add_runtime_dependency 'hirb', '~> 0.7'
   gem.add_runtime_dependency 'coolline', '>= 0.4.2'
   gem.add_runtime_dependency 'awesome_print', '~> 1.2'
   gem.add_runtime_dependency 'railties', '>= 3.0'
+
+  if RUBY_PLATFORM == 'java'
+    gem.add_development_dependency 'pry-nav'
+  else
+    gem.add_development_dependency 'pry-byebug'
+  end
 end
