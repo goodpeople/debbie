@@ -12,8 +12,8 @@ Gem::Specification.new do |gem|
   gem.summary       = 'Exercise those fingers. Pry-based enhancements for the default Rails console.'
   gem.description   = "Spending hours in the rails console? Spruce it up and show off those hard-working hands! Debbie replaces IRB with Pry, improves output through awesome_print, and has some other goodies up its sleeves."
 
-  gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-  gem.files         = `git ls-files`.split("\n")
+  gem.executables   = `git ls-files -- exe/*`.split("\n").map{ |f| File.basename(f) }
+  gem.files         = `git ls-files`.split("\n").reject { |f| f.match(%r{^(spec|bin)/}) }
   gem.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   gem.require_paths = ['lib']
 
